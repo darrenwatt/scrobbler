@@ -2,8 +2,11 @@ import os
 import requests
 from time import sleep
 from pprint import pprint
-# import config with variables user, key
+# import config with variables user, key - rename sample-config.py as config.py with your settings
 import config
+
+# set vars
+output_filename = "scrobble-output.txt"
 
 def get_playing(previous):
     global latest_track
@@ -18,12 +21,14 @@ def get_playing(previous):
                "format": data_format}
     r = requests.get(base_url, payload)
     data = r.json()
+
+    # get latest track
     try:
         latest_track = data['recenttracks']['track'][0]
     except KeyError:
         track = "Nothing Playing"
         print "updating file {0}".format(track)
-        with open(os.path.normpath("scrobble-output.txt"), "w") as f:
+        with open(os.path.normpath(output_filename), "w") as f:
             f.write(track)
 
     try:
@@ -33,14 +38,21 @@ def get_playing(previous):
             scrobble = "Now Playing: {0} by {1}".format(song, artist)
             if scrobble != previous:
                 print "updating file {0}".format(scrobble)
-                with open(os.path.normpath("scrobble-output.txt"), "w") as f:
+                with open(os.path.normpath(output_filename), "w") as f:
                     f.write(scrobble)
             return scrobble
     except KeyError:
-        pass
+            track = "Nothing Playing"
+            if track != previous:
+                print "updating file {0}".format(track)
+                with open(os.path.normpath(output_filename), "w") as f:
+                    f.write(track)
+            return track
 
 previous = "None"
+# main loop
 running = True
 while running:
     previous = get_playing(previous)
+    # update every 5 seconds
     sleep(5)
