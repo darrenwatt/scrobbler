@@ -21,38 +21,32 @@ def get_playing(previous):
                "format": data_format}
     r = requests.get(base_url, payload)
     data = r.json()
+    #pprint(data)
 
-    # get latest track
-    try:
-        latest_track = data['recenttracks']['track'][0]
-    except KeyError:
-        track = "Nothing Playing"
-        print "updating file {0}".format(track)
+    latest_track = data['recenttracks']['track'][0]
+    #pprint(latest_track)
+
+    # check if latest track is playing now
+    playing = latest_track.get('@attr')
+    if playing is None:
+        scrobble = 'Nothing Playing'
+    else:
+        artist = latest_track['artist']['#text'].encode('utf-8')
+        song = latest_track['name'].encode('utf-8')
+        scrobble = "Now Playing: {0} by {1}".format(song, artist)
+
+    if scrobble != previous:
+        print "{0}, updating file".format(scrobble)
         with open(os.path.normpath(output_filename), "w") as f:
-            f.write(track)
-
-    try:
-        if latest_track['@attr']['nowplaying'] == 'true':
-            artist = latest_track['artist']['#text'].encode('utf-8')
-            song = latest_track['name'].encode('utf-8')
-            scrobble = "Now Playing: {0} by {1}".format(song, artist)
-            if scrobble != previous:
-                print "updating file {0}".format(scrobble)
-                with open(os.path.normpath(output_filename), "w") as f:
-                    f.write(scrobble)
-            return scrobble
-    except KeyError:
-            track = "Nothing Playing"
-            if track != previous:
-                print "updating file {0}".format(track)
-                with open(os.path.normpath(output_filename), "w") as f:
-                    f.write(track)
-            return track
+            f.write(scrobble)
+    # else:
+        # print "{}, not updating file".format(scrobble)
+    return scrobble
 
 previous = "None"
 # main loop
 running = True
 while running:
     previous = get_playing(previous)
-    # update every 5 seconds
-    sleep(5)
+    # update every 10 seconds
+    sleep(10)
