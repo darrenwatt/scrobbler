@@ -21,15 +21,18 @@ def get_playing(previous):
                "format": data_format}
     r = requests.get(base_url, payload)
     data = r.json()
-    #pprint(data)
+    # print "http status:", r.status_code
+    # pprint(data)
 
-    latest_track = data['recenttracks']['track'][0]
-    #pprint(latest_track)
+    try:
+        latest_track = data['recenttracks']['track'][0]
+    except KeyError:
+        pass
 
     # check if latest track is playing now
     playing = latest_track.get('@attr')
     if playing is None:
-        scrobble = 'Nothing Playing'
+        scrobble = 'Now Playing: Nothing'
     else:
         artist = latest_track['artist']['#text'].encode('utf-8')
         song = latest_track['name'].encode('utf-8')
